@@ -1,15 +1,15 @@
 # d_glfw
 
-There is a C++ version, and D version
+There is a GLFW and SDL version
 
 
-# Run the D version
+# Run the D versions
 
 ```bash
 dub run
 ```
 
-# Run the C++ version
+# Run the C++ versions
 
 ```bash
 make && ./main
