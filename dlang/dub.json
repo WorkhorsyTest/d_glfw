@@ -1,10 +1,10 @@
 {
 	"name": "main",
-	"description": "Example of sdl and glfw in D",
+	"description": "Render OpenGL texture with GLFW in Dlang",
 	"authors": [
 		"Matthew Brennan Jones <matthew.brennan.jones@gmail.com>",
 	],
-	"homepage": "https://github.com/workhorsy/d_test_glfw",
+	"homepage": "https://github.com/workhorsy/d_glfw",
 	"copyright": "Copyright (c) 2017 Matthew Brennan Jones",
 	"license": "MIT",
 	"targetType": "executable",
@@ -13,8 +13,8 @@
 	"dependencies": {
 		"derelict-util": "~>2.0",
 		"derelict-sdl2": "~>2.0",
-		"derelict-sdl2_gfx": "~>1.0",
 		"derelict-gl3": "~>1.0",
 		"derelict-glfw3": "~>2.0.0",
 	},
 }
+

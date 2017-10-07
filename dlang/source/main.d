@@ -95,13 +95,7 @@ const GLuint WIDTH = 1208, HEIGHT = 800;
 
 int main() {
 	InitDerelict();
-/*
-	// Initialize SDL
-	if (SDL_Init(SDL_INIT_VIDEO) != 0) {
-		stderr.writefln("Could not initialize SDL: %s", SDL_GetError());
-		return 1;
-	}
-*/
+
 	// Init GLFW
 	if (! glfwInit()) {
 		return 1;
@@ -114,7 +108,7 @@ int main() {
 	glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);
 
 	// Create a windowed mode window and its OpenGL context
-	GLFWwindow* window = glfwCreateWindow(WIDTH, HEIGHT, "OpenGL Texture Example", null, null);
+	GLFWwindow* window = glfwCreateWindow(WIDTH, HEIGHT, "GLFW OpenGL Texture Example", null, null);
 	if (! window) {
 		glfwTerminate();
 		return 1;
