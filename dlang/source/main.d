@@ -46,6 +46,10 @@ void InitDerelict() {
 	}
 }
 
+size_t sizeof_array(T)(T[] array) {
+	return array.length * T.sizeof;
+}
+
 string GetSDLError() {
 	import std.string : fromStringz;
 	return cast(string) fromStringz(SDL_GetError());
@@ -155,10 +159,10 @@ int main() {
 	glBindVertexArray(VAO);
 
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
-	glBufferData(GL_ARRAY_BUFFER, cast(long)vertices.sizeof, &vertices, GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, cast(long)sizeof_array(vertices), vertices.ptr, GL_STATIC_DRAW);
 
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, cast(long)indices.sizeof, &indices, GL_STATIC_DRAW);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, cast(long)sizeof_array(indices), indices.ptr, GL_STATIC_DRAW);
 
 	// Position attribute
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * GLfloat.sizeof, cast(GLvoid*)0);
