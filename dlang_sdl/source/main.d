@@ -10,6 +10,16 @@ import derelict.opengl3.gl3;
 import shader;
 
 void InitDerelict() {
+	import std.file : chdir, getcwd;
+
+	// Change to the directory with the Windows libraries
+	string original_dir = getcwd();
+	stdout.writefln(original_dir);
+	stdout.flush();
+	version (Windows) {
+		chdir("../lib/windows/x86_64");
+	}
+
 	string[] errors;
 
 	try {
@@ -29,6 +39,8 @@ void InitDerelict() {
 	} catch (Throwable) {
 		errors ~= "Failed to find the library OpenGL3.";
 	}
+
+	//chdir(original_dir);
 
 	foreach (error ; errors) {
 		stderr.writeln(error);
@@ -82,6 +94,8 @@ SDL_Surface* EnsureSurfaceRGBA8888(SDL_Surface* surface) {
 const GLuint WIDTH = 1208, HEIGHT = 800;
 
 int main() {
+	import std.string : format;
+
 	InitDerelict();
 
 	// Initialize SDL
@@ -121,7 +135,7 @@ int main() {
 	glViewport(0, 0, WIDTH, HEIGHT);
 
 	// Build and compile our shader program
-	Shader ourShader = Shader("source/texture.vs", "source/texture.frag");
+	Shader ourShader = Shader("../../../texture.vs", "../../../texture.frag");
 
 	// Set up vertex data (and buffer(s)) and attribute pointers
 	GLfloat[] vertices = [
@@ -174,7 +188,10 @@ int main() {
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	// Load, create texture and generate mipmaps
-	SDL_Surface* surface1 = IMG_Load("container.jpg");
+	SDL_Surface* surface1 = IMG_Load("../../../container.jpg");
+	if (! surface1) {
+		throw new Exception("Failed to load image: %s".format(GetSDLError()));
+	}
 	surface1 = EnsureSurfaceRGBA8888(surface1);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, surface1.w, surface1.h, 0, GL_RGBA, GL_UNSIGNED_INT_8_8_8_8, surface1.pixels);
 	glGenerateMipmap(GL_TEXTURE_2D);
@@ -195,7 +212,10 @@ int main() {
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	// Load, create texture and generate mipmaps
-	SDL_Surface* surface2 = IMG_Load("awesomeface.png");
+	SDL_Surface* surface2 = IMG_Load("../../../awesomeface.png");
+	if (! surface2) {
+		throw new Exception("Failed to load image: %s".format(GetSDLError()));
+	}
 	surface2 = EnsureSurfaceRGBA8888(surface2);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, surface2.w, surface2.h, 0, GL_RGBA, GL_UNSIGNED_INT_8_8_8_8, surface2.pixels);
 	glGenerateMipmap(GL_TEXTURE_2D);
@@ -251,5 +271,3 @@ int main() {
 
 	return 0;
 }
-
-
