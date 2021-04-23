@@ -8,6 +8,7 @@ import derelict.sdl2.image;
 import derelict.opengl3.gl3;
 
 import shader;
+import sprite;
 
 void InitDerelict() {
 	import std.file : chdir, getcwd;
@@ -91,7 +92,7 @@ SDL_Surface* EnsureSurfaceRGBA8888(SDL_Surface* surface) {
 
 
 // Window dimensions
-const GLuint WIDTH = 1208, HEIGHT = 800;
+const GLuint WIDTH = 1280, HEIGHT = 800;
 
 int main() {
 	import std.string : format;
@@ -126,16 +127,16 @@ int main() {
 	// Reload to get new OpenGL functions
 	DerelictGL3.reload();
 
-	stdout.writefln("Vendor:   %s",   to!string(glGetString(GL_VENDOR)));
-	stdout.writefln("Renderer: %s",   to!string(glGetString(GL_RENDERER)));
-	stdout.writefln("Version:  %s",   to!string(glGetString(GL_VERSION)));
-	stdout.writefln("GLSL:     %s", to!string(glGetString(GL_SHADING_LANGUAGE_VERSION)));
+	stdout.writefln("Vendor:   %s", glGetString(GL_VENDOR).to!string);
+	stdout.writefln("Renderer: %s", glGetString(GL_RENDERER).to!string);
+	stdout.writefln("Version:  %s", glGetString(GL_VERSION).to!string);
+	stdout.writefln("GLSL:     %s", glGetString(GL_SHADING_LANGUAGE_VERSION).to!string);
 
 	// Define the viewport dimensions
 	glViewport(0, 0, WIDTH, HEIGHT);
 
 	// Build and compile our shader program
-	Shader ourShader = Shader("../../../texture.vs", "../../../texture.frag");
+	//Shader ourShader = Shader("../../../texture.vs", "../../../texture.frag");
 
 	// Set up vertex data (and buffer(s)) and attribute pointers
 	GLfloat[] vertices = [
@@ -174,7 +175,7 @@ int main() {
 
 	glBindVertexArray(0); // Unbind VAO
 
-
+/*
 	// ====================
 	// Texture 1
 	// ====================
@@ -222,7 +223,18 @@ int main() {
 	SDL_FreeSurface(surface2);
 	surface1 = null;
 	glBindTexture(GL_TEXTURE_2D, 0);
+*/
 
+	auto sprite = new Sprite("../../../container.jpg");//width, height, 0x00FF00FF);//"two.png");
+	sprite.init();
+	sprite.x = cast(int) (WIDTH / 2) - (sprite.w / 2);
+	sprite.y = cast(int) (HEIGHT / 2) - (sprite.h / 2);
+	//sprite.z = 0.5f;
+
+	auto sprite2 = new Sprite("../../../awesomeface.png");//width, height, 0x00FF00FF);//"two.png");
+	sprite2.init();
+	sprite2.x = cast(int) (WIDTH / 2) - (sprite2.w / 2);
+	sprite2.y = cast(int) (HEIGHT / 2) - (sprite2.h / 2);
 
 	// Game loop
 	bool is_running = true;
@@ -232,23 +244,45 @@ int main() {
 			if (event.type == SDL_QUIT) {
 				is_running = false;
 			}
+
+			if (event.type == SDL_KEYDOWN) {
+				switch (event.key.keysym.sym) {
+					case SDLK_ESCAPE:
+						is_running = false;
+						break;
+					case SDLK_LEFT:
+						sprite.x = sprite.x - 1;
+						sprite2.x = sprite2.x + 1;
+						break;
+					case SDLK_RIGHT:
+						sprite.x = sprite.x + 1;
+						sprite2.x = sprite2.x - 1;
+						break;
+					default:
+						break;
+				}
+			}
 		}
 
 		// Render
 		// Clear the colorbuffer
-		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+		glClearColor(0.0f, 1.0f, 0.0f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
 
+		sprite.render();
+		sprite2.render();
+/*
 		// Bind Textures using texture units
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, texture1);
 		glUniform1i(glGetUniformLocation(ourShader.Program, "ourTexture1"), 0);
+
 		glActiveTexture(GL_TEXTURE1);
 		glBindTexture(GL_TEXTURE_2D, texture2);
 		glUniform1i(glGetUniformLocation(ourShader.Program, "ourTexture2"), 1);
-
+*/
 		// Activate shader
-		ourShader.Use();
+		//ourShader.Use();
 
 		// Draw container
 		glBindVertexArray(VAO);
