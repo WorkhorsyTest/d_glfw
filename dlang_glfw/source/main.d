@@ -113,6 +113,22 @@ extern (C) void key_callback(GLFWwindow* window, int key, int scancode, int acti
 			case GLFW_KEY_X:
 				Manager.loadSprite("../../../awesomeface.png");
 				break;
+			case GLFW_KEY_W:
+				g_sprites[0]._origin.y -= 0.1f;
+				g_sprites[1]._origin.y += 0.1f;
+				break;
+			case GLFW_KEY_S:
+				g_sprites[0]._origin.y += 0.1f;
+				g_sprites[1]._origin.y -= 0.1f;
+				break;
+			case GLFW_KEY_A:
+				g_sprites[0]._origin.x += 0.1f;
+				g_sprites[1]._origin.x -= 0.1f;
+				break;
+			case GLFW_KEY_D:
+				g_sprites[0]._origin.x -= 0.1f;
+				g_sprites[1]._origin.x += 0.1f;
+				break;
 			default:
 				break;
 		}

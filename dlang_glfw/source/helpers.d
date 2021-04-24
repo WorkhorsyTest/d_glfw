@@ -8,6 +8,12 @@ import derelict.glfw3.glfw3;
 
 import global;
 
+struct Vector3 {
+	float x = 0;
+	float y = 0;
+	float z = 0;
+}
+
 immutable u32 MASK_R = 0xFF000000;
 immutable u32 MASK_G = 0x00FF0000;
 immutable u32 MASK_B = 0x0000FF00;

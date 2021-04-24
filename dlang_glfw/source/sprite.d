@@ -57,6 +57,10 @@ class Sprite {
 			0.0f, 0.0f, 0.0f, 0.5f,
 		];
 
+		_origin.x = _translation[3];
+		_origin.y = _translation[7];
+		_origin.z = _translation[15];
+
 		// Set up vertex data (and buffer(s)) and attribute pointers
 		float w = _surface_w / SCREEN_WIDTH.to!float;
 		float h = _surface_h / SCREEN_HEIGHT.to!float;
@@ -208,6 +212,9 @@ class Sprite {
 		glUniform1i(location, 0);
 
 		// Set the translation
+		_translation[3] = _origin.x;
+		_translation[7] = _origin.y;
+		_translation[15] = _origin.z;
 		location = glGetUniformLocation(_shader.program, "translation");
 		//stdout.writefln("!!! location: %s", location);
 		glUniformMatrix4fv(location, 1, GL_TRUE, _translation.ptr);
@@ -224,6 +231,8 @@ class Sprite {
 		glDeleteBuffers(1, &_EBO);
 		_shader.destroy();
 	}
+
+	Vector3 _origin;
 
 private:
 	int _surface_w;
