@@ -3,8 +3,10 @@
 
 
 import std.conv : to;
-import derelict.sdl2.sdl : Uint32;
+import derelict.sdl2.sdl;
+import derelict.sdl2.image;
 import derelict.opengl3.gl3;
+import derelict.glfw3.glfw3;
 
 import global;
 import helpers;
@@ -15,11 +17,15 @@ import settings : Settings;
 class Sprite {
 	int _load_level = 0;
 
+	bool is_loaded() {
+		return _load_level == 6;
+	}
+
 	this(string image_path) {
 		_image_path = image_path;
 	}
 
-	void init1() {
+	void load0() {
 		import std.string : format, toStringz;
 		import derelict.sdl2.sdl : SDL_Surface, SDL_FreeSurface;
 
@@ -38,11 +44,19 @@ class Sprite {
 				}
 			}
 		}
-		_load_level++;
+	}
+
+	void load1() {
+		import std.string : format, toStringz;
+		import derelict.sdl2.sdl : SDL_Surface, SDL_FreeSurface;
 
 		// Build and compile the shaders
 		_shader = SpriteShader(Settings.vertex_shader, Settings.fragment_shader);
-		_load_level++;
+	}
+
+	void load2() {
+		import std.string : format, toStringz;
+		import derelict.sdl2.sdl : SDL_Surface, SDL_FreeSurface;
 
 		_translation = [
 			1.0f, 0.0f, 0.0f, 0.0f,
@@ -75,10 +89,14 @@ class Sprite {
 			0, 1, 3,
 			1, 2, 3
 		];
-		_load_level++;
 	}
 
-	void init3() {
+	void load3() {
+		import std.string : format, toStringz;
+		import derelict.sdl2.sdl : SDL_Surface, SDL_FreeSurface;
+		u32 a;
+
+		a = SDL_GetTicks();
 		// Create VA0, VBO, and EBO
 		glGenVertexArrays(1, &_VAO);
 		glGenBuffers(1, &_VBO);
@@ -109,31 +127,87 @@ class Sprite {
 
 		// Unbind all operations from this VAO
 		glBindVertexArray(0);
+		//glFinish();
+		print("        #### created VA0, VBO, and EBO for %s", SDL_GetTicks() - a);
+	}
+
+	void load4() {
+		import std.string : format, toStringz;
+		import derelict.sdl2.sdl : SDL_Surface, SDL_FreeSurface;
+		u32 a;
 
 		// Setup the texture and bind all operations to this texture
+		a = SDL_GetTicks();
 		glGenTextures(1, &_texture);
 		glBindTexture(GL_TEXTURE_2D, _texture);
+		print("        #### gen and bind texture for %s", SDL_GetTicks() - a);
 
 		// Set texture parameters
+		a = SDL_GetTicks();
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+		print("        #### set texture param for %s", SDL_GetTicks() - a);
 
 		// Set texture filtering
+		a = SDL_GetTicks();
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		print("        #### set texture param for %s", SDL_GetTicks() - a);
 
 		// Enable transparent textures
+		a = SDL_GetTicks();
 		glEnable(GL_BLEND);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+		print("        #### set blend for %s", SDL_GetTicks() - a);
 
 		// Load the texture and convert it to RGBA8888 if needed
+		a = SDL_GetTicks();
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, _surface_w, _surface_h, 0, GL_RGBA, GL_UNSIGNED_INT_8_8_8_8, cast(void*) _surface_pixels);
+		print("        #### load texture for %s", SDL_GetTicks() - a);
 
 		// Generate mipmaps
+		a = SDL_GetTicks();
 		glGenerateMipmap(GL_TEXTURE_2D);
+		print("        #### gen mipmaps for %s", SDL_GetTicks() - a);
 
 		// Unbind all operations from this texture
+		a = SDL_GetTicks();
 		glBindTexture(GL_TEXTURE_2D, 0);
+		//glFinish();
+		print("        #### unbind texture for %s", SDL_GetTicks() - a);
+	}
+
+	void load5() {
+		import std.string : format, toStringz;
+		import derelict.sdl2.sdl : SDL_Surface, SDL_FreeSurface;
+		u32 a;
+
+	}
+
+	void load() {
+		import std.string : format, toStringz;
+		import derelict.sdl2.sdl : SDL_Surface, SDL_FreeSurface;
+
+		final switch (_load_level) {
+			case 0:
+				load0();
+				break;
+			case 1:
+				load1();
+				break;
+			case 2:
+				load2();
+				break;
+			case 3:
+				load3();
+				break;
+			case 4:
+				load4();
+				break;
+			case 5:
+				load5();
+				break;
+		}
 		_load_level++;
 	}
 
@@ -168,7 +242,7 @@ class Sprite {
 		_shader.destroy();
 	}
 
-//private:
+private:
 	int _surface_w;
 	int _surface_h;
 	Uint32[] _surface_pixels;

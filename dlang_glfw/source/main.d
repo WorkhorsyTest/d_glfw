@@ -15,12 +15,15 @@ import global;
 import helpers;
 import sprite;
 import timer;
+import GC;
 
 
 Tid _thread_id_manager;
 __gshared GLFWwindow* g_thread_window;
 __gshared Sprite g_sprite1 = null;
 __gshared Sprite g_sprite2 = null;
+__gshared bool g_start_loading_1 = false;
+__gshared Sprite[] g_to_load;
 
 void managerWorker(Tid parent_tid) {
 	import std.string : format;
@@ -30,11 +33,10 @@ void managerWorker(Tid parent_tid) {
 	//glewInit();
 
 	Thread.sleep( dur!("seconds")( 5 ) );
-	g_sprite1.init1();
+	g_start_loading_1 = true;
 
-	Thread.sleep( dur!("seconds")( 5 ) );
-	g_sprite2.init1();
-
+	// See GL 3.3 spec, section D.3.1
+	//glFinish();
 	//bool is_running = true;
 
 	//while (is_running) {
@@ -66,7 +68,7 @@ int main() {
 	glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);
 
 	glfwWindowHint(GLFW_VISIBLE, GL_FALSE);
-	g_thread_window = glfwCreateWindow(1, 1, "Thread Window", null, null);
+	g_thread_window = glfwCreateWindow(1, 1, "", null, null);
 	if (! g_thread_window) {
 		glfwTerminate();
 		return 1;
@@ -99,10 +101,14 @@ int main() {
 
 	g_sprite1 = new Sprite("../../../container.jpg");
 	g_sprite2 = new Sprite("../../../awesomeface.png");
+	g_to_load = [g_sprite1, g_sprite2];
+
+	GC.Disable();
 
 	// Game loop
 	auto stop_watch = new Stopwatch(1000);
 	auto fps_timer = new Stopwatch(1000);
+	auto load_timer = new Stopwatch(1000);
 	int fps_counter;
 	while (! glfwWindowShouldClose(window)) {
 		stop_watch.reset();
@@ -116,24 +122,39 @@ int main() {
 		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
 
-		if (g_sprite1 && g_sprite1._load_level == 3) {
-			g_sprite1.init3();
-		}
-		if (g_sprite2 && g_sprite2._load_level == 3) {
-			g_sprite2.init3();
-		}
-
-		if (g_sprite1 && g_sprite1._load_level == 4) {
+		if (g_sprite1 && g_sprite1.is_loaded()) {
 			//stdout.writefln("!!! g_sprite1 w:%s, h:%s, len:%s", g_sprite1._surface_w, g_sprite1._surface_h, g_sprite1._surface_pixels.length); stdout.flush();
 			g_sprite1.render();
 		}
 
-		if (g_sprite2 && g_sprite2._load_level == 4) {
+		if (g_sprite2 && g_sprite2.is_loaded()) {
 			g_sprite2.render();
 		}
 
 		// Swap the screen buffers
 		glfwSwapBuffers(window);
+
+		if (load_timer.is_time() && g_start_loading_1 && g_to_load.length > 0) {
+			load_timer.reset();
+			auto a = SDL_GetTicks();
+			//print("  ??? looping ...");
+			auto sprite = g_to_load[0];
+			if (! sprite.is_loaded()) {
+				//print("    ??? sprite loading ...");
+				sprite.load();
+			}
+			if (sprite.is_loaded()) {
+				//print("        ??? sprite done loading");
+				g_to_load = g_to_load[1 .. $];
+			}
+			print("    ??? loaded sprite for %s", SDL_GetTicks() - a);
+		}
+
+		// Run garbage collector
+		u32 gc_time = GC.Run();
+		//if (gc_time) {
+		//	print("!!!! gc_time: %s", gc_time);
+		//}
 
 		// Get the FPS
 		//print("!!!! _fps: %s", _fps);
@@ -148,10 +169,12 @@ int main() {
 		if (frame_time > 1) {
 			print("!!!! frame_time: %s", frame_time);
 		}
-		SDL_Delay(1000 / 60);
+		SDL_Delay(1000 / FPS);
 	}
 
 	glfwTerminate();
+
+	GC.Enable();
 
 	return 0;
 }
