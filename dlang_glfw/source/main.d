@@ -22,32 +22,134 @@ Tid _thread_id_manager;
 __gshared GLFWwindow* g_thread_window;
 __gshared Sprite g_sprite1 = null;
 __gshared Sprite g_sprite2 = null;
-__gshared bool g_start_loading_1 = false;
 __gshared Sprite[] g_to_load;
+__gshared bool g_start_loading_1 = false;
 
 void managerWorker(Tid parent_tid) {
 	import std.string : format;
-	import core.thread.osthread : Thread;
 
 	glfwMakeContextCurrent(g_thread_window);
-	//glewInit();
+	bool is_running = true;
 
-	Thread.sleep( dur!("seconds")( 5 ) );
-	g_start_loading_1 = true;
+	while (is_running) {
+		receive((ManagerRequest request) {
+			final switch (request) {
+				case ManagerRequest.stop:
+					is_running = false;
+					break;
+				case ManagerRequest.load_image:
+					print("??? 1 load_image");
+					g_sprite1.load();
+					print("??? 1 load_image done");
+					//g_sprite2.load();
+					//send(parent_tid, ManagerResponse.print, "!!! Manager load_image");
+					break;
+				case ManagerRequest.compile_shader:
+					print("??? 2 compile_shader");
+					g_sprite1.load();
+					//g_sprite2.load();
+					print("??? 2 compile_shader done");
+					//send(parent_tid, ManagerResponse.print, "!!! Manager compile_shader");
+					break;
+				case ManagerRequest.init_arrays:
+					print("??? 3 init_arrays");
+					g_sprite1.load();
+					//g_sprite2.load();
+					print("??? 3 init_arrays done");
+					//send(parent_tid, ManagerResponse.print, "!!! Manager init_arrays");
+					break;
+				case ManagerRequest.init_buffers:
+					print("??? 4 init_buffers");
+					g_sprite1.load();
+					//g_sprite2.load();
+					print("??? 4 init_buffers done");
+					//send(parent_tid, ManagerResponse.print, "!!! Manager init_buffers");
+					break;
+				case ManagerRequest.load_texture:
+					print("??? 5 load_texture");
+					g_sprite1.load();
+					//g_sprite2.load();
+					print("??? 5 load_texture done");
+					//send(parent_tid, ManagerResponse.print, "!!! Manager load_texture");
+					break;
+				case ManagerRequest.load_final:
+					print("??? 6 load_final");
+					g_sprite1.load();
+					//g_sprite2.load();
+					print("??? 6 load_final done");
+					//send(parent_tid, ManagerResponse.print, "!!! Manager load_final");
+					break;
+			}
+		}, (Variant data) {
+			print("?????????? unexpected request %s", data);
+			send(parent_tid, ManagerResponse.print, "!!! Manager unexpected request %s".format(data));
+		});
+	}
+}
 
-	// See GL 3.3 spec, section D.3.1
-	//glFinish();
-	//bool is_running = true;
+enum ManagerResponse {
+	print
+}
 
-	//while (is_running) {
-
-	//	Thread.sleep( dur!("seconds")( 1 ) );
-	//}
+enum ManagerRequest {
+	stop,
+	load_image,
+	compile_shader,
+	init_arrays,
+	init_buffers,
+	load_texture,
+	load_final,
 }
 
 extern (C) void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) nothrow {
-	if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
-		glfwSetWindowShouldClose(window, true);
+	import core.stdc.stdio : printf;
+
+	if (action != GLFW_PRESS) return;
+
+	try {
+		switch (key) {
+			case GLFW_KEY_ESCAPE:
+				glfwSetWindowShouldClose(window, true);
+				break;
+			case GLFW_KEY_Z:
+				send(_thread_id_manager, ManagerRequest.load_image);
+				break;
+			case GLFW_KEY_X:
+				send(_thread_id_manager, ManagerRequest.compile_shader);
+				break;
+			case GLFW_KEY_C:
+				send(_thread_id_manager, ManagerRequest.init_arrays);
+				break;
+			case GLFW_KEY_V:
+				g_sprite1.load();
+				//send(_thread_id_manager, ManagerRequest.init_buffers);
+				break;
+			case GLFW_KEY_B:
+				send(_thread_id_manager, ManagerRequest.load_texture);
+				break;
+			case GLFW_KEY_N:
+				send(_thread_id_manager, ManagerRequest.load_final);
+				break;
+			default:
+				break;
+		}
+	} catch (Throwable e) {
+		printf("!!! threw exception");
+	}
+}
+
+void processResponses() {
+	bool has_response = true;
+		while (has_response) {
+			has_response = receiveTimeout(0.msecs, (ManagerResponse response, string data) {
+			final switch (response) {
+				case ManagerResponse.print:
+					print("%s", data);
+					break;
+			}
+		}, (Variant data) {
+			print("?????????? unexpected response %s", data);
+		});
 	}
 }
 
@@ -84,7 +186,6 @@ int main() {
 
 	// Make the window's context current
 	glfwMakeContextCurrent(window);
-	_thread_id_manager = spawn(&managerWorker, thisTid);
 
 	glfwSetKeyCallback(window, &key_callback);
 
@@ -101,8 +202,9 @@ int main() {
 
 	g_sprite1 = new Sprite("../../../container.jpg");
 	g_sprite2 = new Sprite("../../../awesomeface.png");
-	g_to_load = [g_sprite1, g_sprite2];
+//	g_to_load = [g_sprite1, g_sprite2];
 
+	_thread_id_manager = spawn(&managerWorker, thisTid);
 	GC.Disable();
 
 	// Game loop
@@ -134,6 +236,8 @@ int main() {
 		// Swap the screen buffers
 		glfwSwapBuffers(window);
 
+		processResponses();
+/*
 		if (load_timer.is_time() && g_start_loading_1 && g_to_load.length > 0) {
 			load_timer.reset();
 			auto a = SDL_GetTicks();
@@ -149,7 +253,7 @@ int main() {
 			}
 			print("    ??? loaded sprite for %s", SDL_GetTicks() - a);
 		}
-
+*/
 		// Run garbage collector
 		u32 gc_time = GC.Run();
 		//if (gc_time) {
@@ -172,6 +276,7 @@ int main() {
 		SDL_Delay(1000 / FPS);
 	}
 
+	send(_thread_id_manager, ManagerRequest.stop);
 	glfwTerminate();
 
 	GC.Enable();

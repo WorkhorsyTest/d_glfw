@@ -3,6 +3,7 @@
 
 
 import std.conv : to;
+import std.string : format, toStringz;
 import derelict.sdl2.sdl;
 import derelict.sdl2.image;
 import derelict.opengl3.gl3;
@@ -26,9 +27,6 @@ class Sprite {
 	}
 
 	void load0() {
-		import std.string : format, toStringz;
-		import derelict.sdl2.sdl : SDL_Surface, SDL_FreeSurface;
-
 		// Load the image using a SDL surface, and save the pixels, w, and h
 		{
 			SDL_Surface* surface = LoadSurface(_image_path);
@@ -47,17 +45,11 @@ class Sprite {
 	}
 
 	void load1() {
-		import std.string : format, toStringz;
-		import derelict.sdl2.sdl : SDL_Surface, SDL_FreeSurface;
-
 		// Build and compile the shaders
 		_shader = SpriteShader(Settings.vertex_shader, Settings.fragment_shader);
 	}
 
 	void load2() {
-		import std.string : format, toStringz;
-		import derelict.sdl2.sdl : SDL_Surface, SDL_FreeSurface;
-
 		_translation = [
 			1.0f, 0.0f, 0.0f, 0.0f,
 			0.0f, 1.0f, 0.0f, 0.0f,
@@ -92,8 +84,6 @@ class Sprite {
 	}
 
 	void load3() {
-		import std.string : format, toStringz;
-		import derelict.sdl2.sdl : SDL_Surface, SDL_FreeSurface;
 		u32 a;
 
 		a = SDL_GetTicks();
@@ -132,8 +122,6 @@ class Sprite {
 	}
 
 	void load4() {
-		import std.string : format, toStringz;
-		import derelict.sdl2.sdl : SDL_Surface, SDL_FreeSurface;
 		u32 a;
 
 		// Setup the texture and bind all operations to this texture
@@ -178,16 +166,11 @@ class Sprite {
 	}
 
 	void load5() {
-		import std.string : format, toStringz;
-		import derelict.sdl2.sdl : SDL_Surface, SDL_FreeSurface;
 		u32 a;
 
 	}
 
 	void load() {
-		import std.string : format, toStringz;
-		import derelict.sdl2.sdl : SDL_Surface, SDL_FreeSurface;
-
 		final switch (_load_level) {
 			case 0:
 				load0();
