@@ -58,6 +58,9 @@ void InitDerelict() {
 	version (Windows) {
 		chdir("../lib/windows/x86_64");
 	}
+	version (linux) {
+		chdir("../lib/linux/x86_64");
+	}
 
 	string[] errors;
 
