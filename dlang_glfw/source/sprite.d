@@ -6,12 +6,11 @@ import std.conv : to;
 import derelict.sdl2.sdl : Uint32;
 import derelict.opengl3.gl3;
 
-import helpers : loadSurface, createSurface, sizeOfArray;
+import global;
+import helpers;
 import sprite_shader : SpriteShader;
 import settings : Settings;
 
-const int _renderer_w = 1280;
-const int _renderer_h = 800;
 
 class Sprite {
 	int _load_level = 0;
@@ -26,7 +25,7 @@ class Sprite {
 
 		// Load the image using a SDL surface, and save the pixels, w, and h
 		{
-			SDL_Surface* surface = loadSurface(_image_path);
+			SDL_Surface* surface = LoadSurface(_image_path);
 			scope(exit) SDL_FreeSurface(surface);
 			_surface_w = surface.w;
 			_surface_h = surface.h;
@@ -53,8 +52,8 @@ class Sprite {
 		];
 
 		// Set up vertex data (and buffer(s)) and attribute pointers
-		float w = _surface_w / _renderer_w.to!float;
-		float h = _surface_h / _renderer_h.to!float;
+		float w = _surface_w / SCREEN_WIDTH.to!float;
+		float h = _surface_h / SCREEN_HEIGHT.to!float;
 		float tr_x = w/2;
 		float tr_y = h/2;
 		float br_y = -(h/2);
@@ -90,11 +89,11 @@ class Sprite {
 
 		// Setup VBO
 		glBindBuffer(GL_ARRAY_BUFFER, _VBO);
-		glBufferData(GL_ARRAY_BUFFER, cast(long)sizeOfArray(_vertices), _vertices.ptr, GL_STATIC_DRAW);
+		glBufferData(GL_ARRAY_BUFFER, cast(long)SizeOfArray(_vertices), _vertices.ptr, GL_STATIC_DRAW);
 
 		// Setup EBO
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _EBO);
-		glBufferData(GL_ELEMENT_ARRAY_BUFFER, cast(long)sizeOfArray(_indices), _indices.ptr, GL_STATIC_DRAW);
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, cast(long)SizeOfArray(_indices), _indices.ptr, GL_STATIC_DRAW);
 
 		// Setup Position attribute
 		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * GLfloat.sizeof, cast(GLvoid*)0);

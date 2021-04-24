@@ -11,11 +11,11 @@ import derelict.sdl2.image;
 import derelict.opengl3.gl3;
 import derelict.glfw3.glfw3;
 
+import global;
 import helpers;
 import sprite;
+import timer;
 
-// Window dimensions
-const GLuint WIDTH = 1280, HEIGHT = 800;
 
 Tid _thread_id_manager;
 __gshared GLFWwindow* g_thread_window;
@@ -29,10 +29,10 @@ void managerWorker(Tid parent_tid) {
 	glfwMakeContextCurrent(g_thread_window);
 	//glewInit();
 
-	Thread.sleep( dur!("seconds")( 1 ) );
+	Thread.sleep( dur!("seconds")( 5 ) );
 	g_sprite1.init1();
 
-	Thread.sleep( dur!("seconds")( 1 ) );
+	Thread.sleep( dur!("seconds")( 5 ) );
 	g_sprite2.init1();
 
 	//bool is_running = true;
@@ -50,7 +50,7 @@ extern (C) void key_callback(GLFWwindow* window, int key, int scancode, int acti
 }
 
 int main() {
-	import std.string : format;
+	import std.string : format, toStringz;
 
 	InitDerelict();
 
@@ -74,7 +74,7 @@ int main() {
 
 	// Create a windowed mode window and its OpenGL context
 	glfwWindowHint(GLFW_VISIBLE, GL_TRUE);
-	GLFWwindow* window = glfwCreateWindow(WIDTH, HEIGHT, "GLFW OpenGL Texture Example", null, g_thread_window);
+	GLFWwindow* window = glfwCreateWindow(SCREEN_WIDTH, SCREEN_HEIGHT, TITLE.toStringz, null, g_thread_window);
 	if (! window) {
 		glfwTerminate();
 		return 1;
@@ -82,6 +82,7 @@ int main() {
 
 	// Make the window's context current
 	glfwMakeContextCurrent(window);
+	_thread_id_manager = spawn(&managerWorker, thisTid);
 
 	glfwSetKeyCallback(window, &key_callback);
 
@@ -94,14 +95,18 @@ int main() {
 	stdout.writefln("GLSL:     %s", to!string(glGetString(GL_SHADING_LANGUAGE_VERSION)));
 
 	// Define the viewport dimensions
-	glViewport(0, 0, WIDTH, HEIGHT);
+	glViewport(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
 
 	g_sprite1 = new Sprite("../../../container.jpg");
 	g_sprite2 = new Sprite("../../../awesomeface.png");
-	_thread_id_manager = spawn(&managerWorker, thisTid);
 
 	// Game loop
+	auto stop_watch = new Stopwatch(1000);
+	auto fps_timer = new Stopwatch(1000);
+	int fps_counter;
 	while (! glfwWindowShouldClose(window)) {
+		stop_watch.reset();
+		fps_counter++;
 		// Check if any events have been activiated (key pressed, mouse moved etc.) and call corresponding response functions
 		glfwPollEvents();
 
@@ -129,6 +134,20 @@ int main() {
 
 		// Swap the screen buffers
 		glfwSwapBuffers(window);
+
+		// Get the FPS
+		//print("!!!! _fps: %s", _fps);
+		if (fps_timer.is_time()) {
+			fps_timer.reset();
+			_fps = fps_counter;
+			fps_counter = 0;
+			glfwSetWindowTitle(window, "%s FPS: %s".format(TITLE, _fps).toStringz);
+		}
+
+		auto frame_time = stop_watch.ticks_since_reset();
+		if (frame_time > 1) {
+			print("!!!! frame_time: %s", frame_time);
+		}
 		SDL_Delay(1000 / 60);
 	}
 
