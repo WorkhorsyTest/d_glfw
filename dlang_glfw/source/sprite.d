@@ -117,7 +117,7 @@ class Sprite {
 
 		// Unbind all operations from this VAO
 		glBindVertexArray(0);
-		//glFinish();
+		glFinish();
 		print("        #### created VA0, VBO, and EBO for %s", SDL_GetTicks() - a);
 	}
 
@@ -161,7 +161,7 @@ class Sprite {
 		// Unbind all operations from this texture
 		a = SDL_GetTicks();
 		glBindTexture(GL_TEXTURE_2D, 0);
-		//glFinish();
+		glFinish();
 		print("        #### unbind texture for %s", SDL_GetTicks() - a);
 	}
 

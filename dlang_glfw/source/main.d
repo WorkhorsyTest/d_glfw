@@ -20,10 +20,9 @@ import GC;
 
 Tid _thread_id_manager;
 __gshared GLFWwindow* g_thread_window;
-__gshared Sprite g_sprite1 = null;
-__gshared Sprite g_sprite2 = null;
-__gshared Sprite[] g_to_load;
-__gshared bool g_start_loading_1 = false;
+__gshared Sprite g_temp_sprite = null;
+
+Sprite[] g_sprites;
 
 void managerWorker(Tid parent_tid) {
 	import std.string : format;
@@ -39,45 +38,42 @@ void managerWorker(Tid parent_tid) {
 					break;
 				case ManagerRequest.load_image:
 					print("??? 1 load_image");
-					g_sprite1.load();
+					g_temp_sprite.load();
 					print("??? 1 load_image done");
-					//g_sprite2.load();
 					//send(parent_tid, ManagerResponse.print, "!!! Manager load_image");
 					break;
 				case ManagerRequest.compile_shader:
 					print("??? 2 compile_shader");
-					g_sprite1.load();
-					//g_sprite2.load();
+					g_temp_sprite.load();
 					print("??? 2 compile_shader done");
 					//send(parent_tid, ManagerResponse.print, "!!! Manager compile_shader");
 					break;
 				case ManagerRequest.init_arrays:
 					print("??? 3 init_arrays");
-					g_sprite1.load();
-					//g_sprite2.load();
+					g_temp_sprite.load();
 					print("??? 3 init_arrays done");
 					//send(parent_tid, ManagerResponse.print, "!!! Manager init_arrays");
+					send(parent_tid, LoadingStatus.a_done);
 					break;
 				case ManagerRequest.init_buffers:
 					print("??? 4 init_buffers");
-					g_sprite1.load();
-					//g_sprite2.load();
+//					g_temp_sprite.load();
 					print("??? 4 init_buffers done");
 					//send(parent_tid, ManagerResponse.print, "!!! Manager init_buffers");
+					send(parent_tid, LoadingStatus.b_done);
 					break;
 				case ManagerRequest.load_texture:
 					print("??? 5 load_texture");
-					g_sprite1.load();
-					//g_sprite2.load();
+					g_temp_sprite.load();
 					print("??? 5 load_texture done");
 					//send(parent_tid, ManagerResponse.print, "!!! Manager load_texture");
 					break;
 				case ManagerRequest.load_final:
 					print("??? 6 load_final");
-					g_sprite1.load();
-					//g_sprite2.load();
+					g_temp_sprite.load();
 					print("??? 6 load_final done");
 					//send(parent_tid, ManagerResponse.print, "!!! Manager load_final");
+					send(parent_tid, LoadingStatus.c_done);
 					break;
 			}
 		}, (Variant data) {
@@ -112,23 +108,10 @@ extern (C) void key_callback(GLFWwindow* window, int key, int scancode, int acti
 				glfwSetWindowShouldClose(window, true);
 				break;
 			case GLFW_KEY_Z:
-				send(_thread_id_manager, ManagerRequest.load_image);
+				Manager.loadSprite("../../../container.jpg");
 				break;
 			case GLFW_KEY_X:
-				send(_thread_id_manager, ManagerRequest.compile_shader);
-				break;
-			case GLFW_KEY_C:
-				send(_thread_id_manager, ManagerRequest.init_arrays);
-				break;
-			case GLFW_KEY_V:
-				g_sprite1.load();
-				//send(_thread_id_manager, ManagerRequest.init_buffers);
-				break;
-			case GLFW_KEY_B:
-				send(_thread_id_manager, ManagerRequest.load_texture);
-				break;
-			case GLFW_KEY_N:
-				send(_thread_id_manager, ManagerRequest.load_final);
+				Manager.loadSprite("../../../awesomeface.png");
 				break;
 			default:
 				break;
@@ -138,18 +121,99 @@ extern (C) void key_callback(GLFWwindow* window, int key, int scancode, int acti
 	}
 }
 
-void processResponses() {
-	bool has_response = true;
-		while (has_response) {
-			has_response = receiveTimeout(0.msecs, (ManagerResponse response, string data) {
-			final switch (response) {
-				case ManagerResponse.print:
-					print("%s", data);
-					break;
+enum LoadingStatus {
+	idle,
+	inited,
+	a_started,
+	a_done,
+	b_started,
+	b_done,
+	c_started,
+	c_done,
+}
+
+class Manager {
+	static LoadingStatus _loading_status;
+
+	static void SetLoadingStatus(LoadingStatus value) {
+		_loading_status = value;
+		print("############### _loading_status; %s", _loading_status);
+	}
+
+	static void start() {
+		_thread_id_manager = spawn(&managerWorker, thisTid);
+	}
+
+	static void stop() {
+		send(_thread_id_manager, ManagerRequest.stop);
+	}
+
+	static void loadSprite(string file_name) {
+		g_temp_sprite = new Sprite(file_name);
+		SetLoadingStatus(LoadingStatus.inited);
+		loadA();
+	}
+
+	static void loadA() {
+		SetLoadingStatus(LoadingStatus.a_started);
+		send(_thread_id_manager, ManagerRequest.load_image);
+		send(_thread_id_manager, ManagerRequest.compile_shader);
+		send(_thread_id_manager, ManagerRequest.init_arrays);
+	}
+
+	static void loadB() {
+		SetLoadingStatus(LoadingStatus.b_started);
+		g_temp_sprite.load();
+		send(_thread_id_manager, ManagerRequest.init_buffers);
+		SetLoadingStatus(LoadingStatus.b_done);
+	}
+
+	static void loadC() {
+		SetLoadingStatus(LoadingStatus.c_started);
+		send(_thread_id_manager, ManagerRequest.load_texture);
+		send(_thread_id_manager, ManagerRequest.load_final);
+	}
+
+	static void processResponses() {
+		receiveTimeout(0.msecs,
+			(LoadingStatus status) {
+				SetLoadingStatus(status);
+
+				final switch (_loading_status) {
+					case LoadingStatus.idle:
+						break;
+					case LoadingStatus.inited:
+						break;
+					case LoadingStatus.a_started:
+						break;
+					case LoadingStatus.a_done:
+						loadB();
+						break;
+					case LoadingStatus.b_started:
+						break;
+					case LoadingStatus.b_done:
+						loadC();
+						break;
+					case LoadingStatus.c_started:
+						break;
+					case LoadingStatus.c_done:
+						g_sprites ~= g_temp_sprite;
+						g_temp_sprite = null;
+						SetLoadingStatus(LoadingStatus.idle);
+						break;
+				}
+			},
+			(ManagerResponse response, string data) {
+				final switch (response) {
+					case ManagerResponse.print:
+						print("%s", data);
+						break;
+				}
+			},
+			(Variant data) {
+				print("?????????? unexpected response %s", data);
 			}
-		}, (Variant data) {
-			print("?????????? unexpected response %s", data);
-		});
+		);
 	}
 }
 
@@ -200,17 +264,12 @@ int main() {
 	// Define the viewport dimensions
 	glViewport(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
 
-	g_sprite1 = new Sprite("../../../container.jpg");
-	g_sprite2 = new Sprite("../../../awesomeface.png");
-//	g_to_load = [g_sprite1, g_sprite2];
-
-	_thread_id_manager = spawn(&managerWorker, thisTid);
+	Manager.start();
 	GC.Disable();
 
 	// Game loop
 	auto stop_watch = new Stopwatch(1000);
 	auto fps_timer = new Stopwatch(1000);
-	auto load_timer = new Stopwatch(1000);
 	int fps_counter;
 	while (! glfwWindowShouldClose(window)) {
 		stop_watch.reset();
@@ -224,36 +283,17 @@ int main() {
 		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
 
-		if (g_sprite1 && g_sprite1.is_loaded()) {
-			//stdout.writefln("!!! g_sprite1 w:%s, h:%s, len:%s", g_sprite1._surface_w, g_sprite1._surface_h, g_sprite1._surface_pixels.length); stdout.flush();
-			g_sprite1.render();
-		}
-
-		if (g_sprite2 && g_sprite2.is_loaded()) {
-			g_sprite2.render();
+		foreach (sprite ; g_sprites) {
+			if (sprite.is_loaded()) {
+				sprite.render();
+			}
 		}
 
 		// Swap the screen buffers
 		glfwSwapBuffers(window);
 
-		processResponses();
-/*
-		if (load_timer.is_time() && g_start_loading_1 && g_to_load.length > 0) {
-			load_timer.reset();
-			auto a = SDL_GetTicks();
-			//print("  ??? looping ...");
-			auto sprite = g_to_load[0];
-			if (! sprite.is_loaded()) {
-				//print("    ??? sprite loading ...");
-				sprite.load();
-			}
-			if (sprite.is_loaded()) {
-				//print("        ??? sprite done loading");
-				g_to_load = g_to_load[1 .. $];
-			}
-			print("    ??? loaded sprite for %s", SDL_GetTicks() - a);
-		}
-*/
+		Manager.processResponses();
+
 		// Run garbage collector
 		u32 gc_time = GC.Run();
 		//if (gc_time) {
@@ -276,7 +316,7 @@ int main() {
 		SDL_Delay(1000 / FPS);
 	}
 
-	send(_thread_id_manager, ManagerRequest.stop);
+	Manager.stop();
 	glfwTerminate();
 
 	GC.Enable();
