@@ -77,6 +77,9 @@ void InitSDL() {
 	string[] errors;
 
 	version (Windows) {
+		// Set location to look for libsdl, libpng, libjpeg et cetera
+		setCustomLoaderSearchPath("../lib/windows/x86_64/");
+
 		auto sdl_version = loadSDL("../lib/windows/x86_64/SDL2.dll");
 		print("!!! Loaded SDL version: %s", sdl_version);
 		if (sdl_version != sdlSupport) {

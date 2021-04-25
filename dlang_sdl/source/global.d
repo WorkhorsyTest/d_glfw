@@ -29,5 +29,5 @@ immutable string TITLE = "Dlang SDL2 Example";
 int _fps = 0;
 bool _is_running = false;
 Sprite[] g_sprites;
-SDL_GLContext g_thread_context;
-SDL_Window* g_window;
+__gshared SDL_GLContext g_thread_context;
+__gshared SDL_Window* g_window;

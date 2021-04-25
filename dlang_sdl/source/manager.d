@@ -46,8 +46,11 @@ enum LoadingStatus {
 void managerWorker(Tid parent_tid) {
 	import std.string : format;
 
-	//glfwMakeContextCurrent(g_thread_window);
-	SDL_GL_MakeCurrent(g_window, g_thread_context);
+	if (SDL_GL_MakeCurrent(g_window, g_thread_context) != 0) {
+		stderr.writefln("Failed to make context current! SDL Error: %s", GetSDLError());
+		return;
+	}
+
 	bool is_running = true;
 
 	while (is_running) {

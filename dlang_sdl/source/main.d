@@ -43,20 +43,25 @@ int main() {
 		return 1;
 	}
 
-	SDL_GLContext gContext = SDL_GL_CreateContext(g_window);
-	InitOpenGL();
-	if(gContext == null) {
-		stderr.writefln("OpenGL context could not be created! SDL Error: %s", GetSDLError());
-		return 1;
-	}
-
 	g_thread_context = SDL_GL_CreateContext(g_window);
-	if(g_thread_context == null) {
+	if (g_thread_context == null) {
 		stderr.writefln("OpenGL context could not be created! SDL Error: %s", GetSDLError());
 		return 1;
 	}
 
-	SDL_GL_MakeCurrent(g_window, gContext);
+	// Init OpenGL now that we have a context
+	InitOpenGL();
+
+	SDL_GLContext window_context = SDL_GL_CreateContext(g_window);
+	if (window_context == null) {
+		stderr.writefln("OpenGL context could not be created! SDL Error: %s", GetSDLError());
+		return 1;
+	}
+
+	if (SDL_GL_MakeCurrent(g_window, window_context) != 0) {
+		stderr.writefln("Failed to make context current! SDL Error: %s", GetSDLError());
+		return 1;
+	}
 
 	// Reload to get new OpenGL functions
 	//DerelictGL3.reload(); // FIXME: Do we need to update OpenGL extensions?
@@ -93,10 +98,10 @@ int main() {
 						is_running = false;
 						break;
 					case SDLK_z:
-						Manager.loadSprite("../../../container.jpg");
+						Manager.loadSprite("container.jpg");
 						break;
 					case SDLK_x:
-						Manager.loadSprite("../../../awesomeface.png");
+						Manager.loadSprite("awesomeface.png");
 						break;
 					case SDLK_w:
 						g_sprites[0]._origin.y -= 0.1f;
