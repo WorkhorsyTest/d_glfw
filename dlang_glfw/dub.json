@@ -18,7 +18,7 @@
 	"versions": [
 		"GL_41",
 		"GLFW_33",
-		"SDL_204",
+		"SDL_2014",
 		"SDL_Image",
 	]
 }

@@ -16,7 +16,7 @@
 	},
 	"versions": [
 		"GL_41",
-		"SDL_204",
+		"SDL_2014",
 		"SDL_Image",
 	]
 }
