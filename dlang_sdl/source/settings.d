@@ -1,7 +1,9 @@
 
 
-import derelict.sdl2.sdl;
-import derelict.opengl3.gl3;
+import bindbc.opengl.gl;
+import bindbc.sdl;
+import bindbc.sdl.image;
+import bindbc.sdl.bind;
 
 
 abstract class BaseSettings {
@@ -50,9 +52,9 @@ static class Settings330Core : BaseSettings {
 
 	};
 
-	static const SDL_GLattr GL_MAJOR_VERSION = 3;
-	static const SDL_GLattr GL_MINOR_VERSION = 3;
-	static const SDL_GLattr GL_PROFILE_MASK = SDL_GL_CONTEXT_PROFILE_CORE;
+	static const SDL_GLattr GL_MAJOR_VERSION = cast(SDL_GLattr) 3;
+	static const SDL_GLattr GL_MINOR_VERSION = cast(SDL_GLattr) 3;
+	static const SDL_GLattr GL_PROFILE_MASK = cast(SDL_GLattr) SDL_GL_CONTEXT_PROFILE_CORE;
 }
 
 static class Settings300ES : BaseSettings {
@@ -91,9 +93,9 @@ static class Settings300ES : BaseSettings {
 
 	};
 
-	static const SDL_GLattr GL_MAJOR_VERSION = 3;
-	static const SDL_GLattr GL_MINOR_VERSION = 0;
-	static const SDL_GLattr GL_PROFILE_MASK = SDL_GL_CONTEXT_PROFILE_ES;
+	static const SDL_GLattr GL_MAJOR_VERSION = cast(SDL_GLattr) 3;
+	static const SDL_GLattr GL_MINOR_VERSION = cast(SDL_GLattr) 0;
+	static const SDL_GLattr GL_PROFILE_MASK = cast(SDL_GLattr) SDL_GL_CONTEXT_PROFILE_ES;
 }
 
 //alias Settings = Settings300ES;

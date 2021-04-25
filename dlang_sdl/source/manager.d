@@ -6,10 +6,9 @@ import std.concurrency;
 import core.thread;
 import std.variant : Variant;
 
-import derelict.sdl2.sdl;
-import derelict.sdl2.image;
-import derelict.opengl3.gl3;
-//import derelict.glfw3.glfw3;
+import bindbc.opengl.gl;
+import bindbc.sdl;
+import bindbc.sdl.image;
 
 import global;
 import helpers;

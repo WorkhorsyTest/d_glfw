@@ -7,10 +7,10 @@ import std.concurrency;
 import core.thread;
 import std.variant : Variant;
 
-import derelict.sdl2.sdl;
-import derelict.sdl2.image;
-import derelict.opengl3.gl3;
-//import derelict.glfw3.glfw3;
+import bindbc.opengl;
+import bindbc.opengl.gl;
+import bindbc.sdl;
+import bindbc.sdl.image;
 
 import global;
 import helpers;
@@ -21,10 +21,10 @@ import GC;
 
 
 int main() {
-	InitDerelict();
+	InitSDL();
 
 	// Initialize SDL
-	if (SDL_Init(SDL_INIT_VIDEO) != 0) {
+	if (SDL_Init(SDL_INIT_EVERYTHING) != 0) {
 		stderr.writefln("Could not initialize SDL: %s", GetSDLError());
 		return 1;
 	}
@@ -36,7 +36,7 @@ int main() {
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
 	SDL_GL_SetAttribute(SDL_GL_SHARE_WITH_CURRENT_CONTEXT, 1);
 
-	int flags = SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN;
+	SDL_WindowFlags flags = SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN;
 	g_window = SDL_CreateWindow(TITLE.toStringz, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT, flags);
 	if (g_window == null) {
 		stderr.writefln("Failed to create window: %s", GetSDLError());
@@ -44,6 +44,7 @@ int main() {
 	}
 
 	SDL_GLContext gContext = SDL_GL_CreateContext(g_window);
+	InitOpenGL();
 	if(gContext == null) {
 		stderr.writefln("OpenGL context could not be created! SDL Error: %s", GetSDLError());
 		return 1;
@@ -58,7 +59,7 @@ int main() {
 	SDL_GL_MakeCurrent(g_window, gContext);
 
 	// Reload to get new OpenGL functions
-	DerelictGL3.reload();
+	//DerelictGL3.reload(); // FIXME: Do we need to update OpenGL extensions?
 
 	stdout.writefln("Vendor:   %s", glGetString(GL_VENDOR).to!string);
 	stdout.writefln("Renderer: %s", glGetString(GL_RENDERER).to!string);

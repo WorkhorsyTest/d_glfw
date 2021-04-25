@@ -1,9 +1,13 @@
 
+import bindbc.opengl;
+import bindbc.opengl.gl;
 
+import bindbc.sdl;
+import bindbc.sdl.image;
+
+import global;
 
 struct SpriteShader {
-	import derelict.opengl3.gl3;
-
 	this(string vertex_code, string fragment_code, string geometry_code = null) {
 		import std.string : toStringz;
 

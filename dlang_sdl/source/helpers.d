@@ -1,10 +1,12 @@
 
 import std.stdio : stdout, stderr;
 import std.conv : to;
-import derelict.sdl2.sdl;
-import derelict.sdl2.image;
-import derelict.opengl3.gl3;
-//import derelict.glfw3.glfw3;
+
+import bindbc.opengl;
+import bindbc.opengl.gl;
+import bindbc.loader;
+import bindbc.sdl;
+import bindbc.sdl.image;
 
 import global;
 
@@ -48,50 +50,51 @@ float rad2deg(float radians) {
 	return degrees;
 }
 
-void InitDerelict() {
-	import std.file : chdir, getcwd;
-
-	// Change to the directory with the Windows libraries
-	string original_dir = getcwd();
-	stdout.writefln(original_dir);
-	stdout.flush();
-	version (Windows) {
-		chdir("../lib/windows/x86_64");
-	}
-	version (linux) {
-		chdir("../lib/linux/x86_64");
-	}
-
+void InitOpenGL() {
 	string[] errors;
 
-	try {
-		DerelictSDL2.load(SharedLibVersion(2, 0, 2));
-	} catch (Throwable) {
-		errors ~= "Failed to find the library SDL2.";
+	version (Windows) {
+		auto opengl_version = loadOpenGL();
+		print("!!! Loaded OpenGL version: %s", opengl_version);
+		if (opengl_version != GLSupport.gl33) {
+			errors ~= "Failed to load the library OpenGL.";
+		}
 	}
-
-	try {
-		DerelictSDL2Image.load();
-	} catch (Throwable) {
-		errors ~= "Failed to find the library SDL2 Image.";
+	version (linux) {
+		static assert(false);
 	}
-
-	try {
-		DerelictGL3.load();
-	} catch (Throwable) {
-		errors ~= "Failed to find the library OpenGL3.";
-	}
-/*
-	try {
-		DerelictGLFW3.load();
-	} catch (Throwable) {
-		errors ~= "Failed to find the library GLFW3.";
-	}
-*/
-	//chdir(original_dir);
 
 	foreach (error ; errors) {
-		stderr.writeln(error);
+		stderr.writeln(error); stderr.flush();
+	}
+	if (errors.length > 0) {
+		import std.array : join;
+		throw new Exception(join(errors, "\r\n"));
+	}
+}
+
+void InitSDL() {
+	string[] errors;
+
+	version (Windows) {
+		auto sdl_version = loadSDL("../lib/windows/x86_64/SDL2.dll");
+		print("!!! Loaded SDL version: %s", sdl_version);
+		if (sdl_version != sdlSupport) {
+			errors ~= "Failed to load the library SDL2.";
+		}
+
+		auto sdl_image_version = loadSDLImage("../lib/windows/x86_64/SDL2_image.dll");
+		print("!!! Loaded SDL_Image version: %s", sdl_image_version);
+		if (sdl_image_version != sdlImageSupport) {
+			errors ~= "Failed to load the library SDL_Image.";
+		}
+	}
+	version (linux) {
+		static assert(false);
+	}
+
+	foreach (error ; errors) {
+		stderr.writeln(error); stderr.flush();
 	}
 	if (errors.length > 0) {
 		import std.array : join;
