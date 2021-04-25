@@ -1,6 +1,6 @@
 
 
-import derelict.glfw3.glfw3;
+import derelict.sdl2.sdl;
 import sprite;
 
 import std.stdint;
@@ -24,9 +24,10 @@ immutable bool IS_RELEASE = true;
 immutable int FPS = 60;
 immutable int SCREEN_WIDTH = 1280;
 immutable int SCREEN_HEIGHT = 800;
-immutable string TITLE = "Dlang GLTF Example";
+immutable string TITLE = "Dlang SDL2 Example";
 
 int _fps = 0;
 bool _is_running = false;
 Sprite[] g_sprites;
-__gshared GLFWwindow* g_thread_window;
+SDL_GLContext g_thread_context;
+SDL_Window* g_window;

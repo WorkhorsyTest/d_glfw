@@ -1,20 +1,52 @@
 
-
 import std.stdio : stdout, stderr;
 import std.conv : to;
 import derelict.sdl2.sdl;
 import derelict.sdl2.image;
-//import derelict.sdl2.gfx.gfx;
-//import derelict.sdl2.gfx.primitives;
 import derelict.opengl3.gl3;
 //import derelict.glfw3.glfw3;
 
+import global;
 
+struct Vector3 {
+	float x = 0;
+	float y = 0;
+	float z = 0;
+}
 
-immutable Uint32 MASK_R = 0xFF000000;
-immutable Uint32 MASK_G = 0x00FF0000;
-immutable Uint32 MASK_B = 0x0000FF00;
-immutable Uint32 MASK_A = 0x000000FF;
+immutable u32 MASK_R = 0xFF000000;
+immutable u32 MASK_G = 0x00FF0000;
+immutable u32 MASK_B = 0x0000FF00;
+immutable u32 MASK_A = 0x000000FF;
+
+void print(string message) {
+	stdout.writeln(message); stdout.flush();
+}
+
+void print(alias fmt, A...)(A args)
+if (isSomeString!(typeof(fmt))) {
+	import std.format : checkFormatException;
+
+	alias e = checkFormatException!(fmt, A);
+	static assert(!e, e.msg);
+	return print(fmt, args);
+}
+
+void print(Char, A...)(in Char[] fmt, A args) {
+	stdout.writefln(fmt, args); stdout.flush();
+}
+
+float deg2rad(float degrees) {
+	import std.math : PI;
+	float radians = (degrees * PI) / 180.0f;
+	return radians;
+}
+
+float rad2deg(float radians) {
+	import std.math : PI;
+	float degrees = radians * (180.0f / PI);
+	return degrees;
+}
 
 void InitDerelict() {
 	import std.file : chdir, getcwd;
@@ -25,6 +57,9 @@ void InitDerelict() {
 	stdout.flush();
 	version (Windows) {
 		chdir("../lib/windows/x86_64");
+	}
+	version (linux) {
+		chdir("../lib/linux/x86_64");
 	}
 
 	string[] errors;
@@ -64,20 +99,20 @@ void InitDerelict() {
 	}
 }
 
-@safe @nogc pure nothrow Uint8 toRed(Uint32 color) {
-	return cast(Uint8) ((color << 0) >> 24);
+@safe @nogc pure nothrow u8 toRed(u32 color) {
+	return cast(u8) ((color << 0) >> 24);
 }
 
-@safe @nogc pure nothrow Uint8 toGreen(Uint32 color) {
-	return cast(Uint8) ((color << 8) >> 24);
+@safe @nogc pure nothrow u8 toGreen(u32 color) {
+	return cast(u8) ((color << 8) >> 24);
 }
 
-@safe @nogc pure nothrow Uint8 toBlue(Uint32 color) {
-	return cast(Uint8) ((color << 16) >> 24);
+@safe @nogc pure nothrow u8 toBlue(u32 color) {
+	return cast(u8) ((color << 16) >> 24);
 }
 
-@safe @nogc pure nothrow Uint8 toAlpha(Uint32 color) {
-	return cast(Uint8) ((color << 24) >> 24);
+@safe @nogc pure nothrow u8 toAlpha(u32 color) {
+	return cast(u8) ((color << 24) >> 24);
 }
 
 size_t SizeOfArray(T)(T[] array) {
@@ -136,24 +171,6 @@ SDL_Surface* LoadSurface(const string file_name) {
 	}
 */
 	surface = EnsureSurfaceRGBA8888(surface);
-
-	return surface;
-}
-
-SDL_Surface* CreateSurface(int w, int h, Uint32 color) {
-	import std.string : format, toStringz;
-
-	SDL_Surface* surface = SDL_CreateRGBSurface(0, w, h, 32, MASK_R, MASK_G, MASK_B, MASK_A);
-	if (surface == null) {
-		throw new Exception("Failed to create surface: %s".format(GetSDLError()));
-	}
-	surface = EnsureSurfaceRGBA8888(surface);
-
-	// Fill the surface with the color
-	SDL_Rect rect = { 0, 0, surface.w, surface.h };
-	if (SDL_FillRect(surface, &rect, color) != 0) {
-		throw new Exception("Failed to fill surface with color: %s".format(GetSDLError()));
-	}
 
 	return surface;
 }

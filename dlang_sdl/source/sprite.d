@@ -3,67 +3,30 @@
 
 
 import std.conv : to;
-import derelict.sdl2.sdl : Uint32;
+import std.string : format, toStringz;
+import derelict.sdl2.sdl;
+import derelict.sdl2.image;
 import derelict.opengl3.gl3;
+//import derelict.glfw3.glfw3;
 
+import global;
 import helpers;
 import sprite_shader : SpriteShader;
 import settings : Settings;
 
-const int _renderer_w = 1280;
-const int _renderer_h = 800;
 
 class Sprite {
+	int _load_level = 0;
+
+	bool is_loaded() {
+		return _load_level == 6;
+	}
+
 	this(string image_path) {
 		_image_path = image_path;
 	}
 
-	int x() {
-		float xf = _translation[3];
-		int x = cast(int) ((xf * _renderer_w.to!float) + (_renderer_w.to!float * 0.5f) - (_surface_w * 0.5f));
-		return x;
-	}
-
-	int x(int value) {
-		float xf = (value  - (_renderer_w.to!float * 0.5f)) / _renderer_w.to!float;
-		float w = _surface_w / _renderer_w.to!float;
-		_translation[3] = xf + (w * 0.5f);
-		return value;
-	}
-
-	int y() {
-		float yf = _translation[7];
-		int y = cast(int) (((-yf) * _renderer_h.to!float) + (_renderer_h.to!float * 0.5f) - (_surface_h * 0.5f));
-		return y;
-	}
-
-	int y(int value) {
-		float yf = ((value - (_renderer_h.to!float * 0.5f)) / _renderer_h.to!float);
-		float h = _surface_h / _renderer_h.to!float;
-		_translation[7] = -(yf + (h * 0.5f));
-		return value;
-	}
-
-	GLfloat z() {
-		return _translation[15];
-	}
-
-	GLfloat z(GLfloat value) {
-		return _translation[15] = value;
-	}
-
-	int w() {
-		return _surface_w;
-	}
-
-	int h() {
-		return _surface_h;
-	}
-
-	void init() {
-		import std.string : format, toStringz;
-		import derelict.sdl2.sdl : SDL_Surface, SDL_FreeSurface;
-
+	void load0() {
 		// Load the image using a SDL surface, and save the pixels, w, and h
 		{
 			SDL_Surface* surface = LoadSurface(_image_path);
@@ -79,10 +42,14 @@ class Sprite {
 				}
 			}
 		}
+	}
 
+	void load1() {
 		// Build and compile the shaders
 		_shader = SpriteShader(Settings.vertex_shader, Settings.fragment_shader);
+	}
 
+	void load2() {
 		_translation = [
 			1.0f, 0.0f, 0.0f, 0.0f,
 			0.0f, 1.0f, 0.0f, 0.0f,
@@ -90,9 +57,13 @@ class Sprite {
 			0.0f, 0.0f, 0.0f, 0.5f,
 		];
 
+		_origin.x = _translation[3];
+		_origin.y = _translation[7];
+		_origin.z = _translation[15];
+
 		// Set up vertex data (and buffer(s)) and attribute pointers
-		float w = _surface_w / _renderer_w.to!float;
-		float h = _surface_h / _renderer_h.to!float;
+		float w = _surface_w / SCREEN_WIDTH.to!float;
+		float h = _surface_h / SCREEN_HEIGHT.to!float;
 		float tr_x = w/2;
 		float tr_y = h/2;
 		float br_y = -(h/2);
@@ -114,7 +85,12 @@ class Sprite {
 			0, 1, 3,
 			1, 2, 3
 		];
+	}
 
+	void load3() {
+		u32 a;
+
+		a = SDL_GetTicks();
 		// Create VA0, VBO, and EBO
 		glGenVertexArrays(1, &_VAO);
 		glGenBuffers(1, &_VBO);
@@ -145,31 +121,81 @@ class Sprite {
 
 		// Unbind all operations from this VAO
 		glBindVertexArray(0);
+		glFinish();
+		print("        #### created VA0, VBO, and EBO for %s", SDL_GetTicks() - a);
+	}
+
+	void load4() {
+		u32 a;
 
 		// Setup the texture and bind all operations to this texture
+		a = SDL_GetTicks();
 		glGenTextures(1, &_texture);
 		glBindTexture(GL_TEXTURE_2D, _texture);
+		print("        #### gen and bind texture for %s", SDL_GetTicks() - a);
 
 		// Set texture parameters
+		a = SDL_GetTicks();
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+		print("        #### set texture param for %s", SDL_GetTicks() - a);
 
 		// Set texture filtering
+		a = SDL_GetTicks();
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		print("        #### set texture param for %s", SDL_GetTicks() - a);
 
 		// Enable transparent textures
+		a = SDL_GetTicks();
 		glEnable(GL_BLEND);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+		print("        #### set blend for %s", SDL_GetTicks() - a);
 
 		// Load the texture and convert it to RGBA8888 if needed
+		a = SDL_GetTicks();
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, _surface_w, _surface_h, 0, GL_RGBA, GL_UNSIGNED_INT_8_8_8_8, cast(void*) _surface_pixels);
+		print("        #### load texture for %s", SDL_GetTicks() - a);
 
 		// Generate mipmaps
+		a = SDL_GetTicks();
 		glGenerateMipmap(GL_TEXTURE_2D);
+		print("        #### gen mipmaps for %s", SDL_GetTicks() - a);
 
 		// Unbind all operations from this texture
+		a = SDL_GetTicks();
 		glBindTexture(GL_TEXTURE_2D, 0);
+		glFinish();
+		print("        #### unbind texture for %s", SDL_GetTicks() - a);
+	}
+
+	void load5() {
+		u32 a;
+
+	}
+
+	void load() {
+		final switch (_load_level) {
+			case 0:
+				load0();
+				break;
+			case 1:
+				load1();
+				break;
+			case 2:
+				load2();
+				break;
+			case 3:
+				load3();
+				break;
+			case 4:
+				load4();
+				break;
+			case 5:
+				load5();
+				break;
+		}
+		_load_level++;
 	}
 
 	void render() {
@@ -186,6 +212,9 @@ class Sprite {
 		glUniform1i(location, 0);
 
 		// Set the translation
+		_translation[3] = _origin.x;
+		_translation[7] = _origin.y;
+		_translation[15] = _origin.z;
 		location = glGetUniformLocation(_shader.program, "translation");
 		//stdout.writefln("!!! location: %s", location);
 		glUniformMatrix4fv(location, 1, GL_TRUE, _translation.ptr);
@@ -202,6 +231,8 @@ class Sprite {
 		glDeleteBuffers(1, &_EBO);
 		_shader.destroy();
 	}
+
+	Vector3 _origin;
 
 private:
 	int _surface_w;
