@@ -1,7 +1,7 @@
 
 module GC;
 
-import derelict.sdl2.sdl;
+import bindbc.sdl;
 import global;
 
 

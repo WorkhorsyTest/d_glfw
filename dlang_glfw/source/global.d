@@ -1,6 +1,9 @@
 
 
-import derelict.glfw3.glfw3;
+
+import bindbc.glfw;
+
+
 import sprite;
 
 import std.stdint;

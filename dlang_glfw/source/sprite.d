@@ -4,10 +4,11 @@
 
 import std.conv : to;
 import std.string : format, toStringz;
-import derelict.sdl2.sdl;
-import derelict.sdl2.image;
-import derelict.opengl3.gl3;
-import derelict.glfw3.glfw3;
+
+import bindbc.opengl;
+import bindbc.opengl.gl;
+import bindbc.sdl;
+import bindbc.sdl.image;
 
 import global;
 import helpers;

@@ -7,10 +7,9 @@ import std.concurrency;
 import core.thread;
 import std.variant : Variant;
 
-import derelict.sdl2.sdl;
-import derelict.sdl2.image;
-import derelict.opengl3.gl3;
-import derelict.glfw3.glfw3;
+import bindbc.opengl;
+import bindbc.glfw;
+import bindbc.sdl;
 
 import global;
 import helpers;
@@ -31,10 +30,10 @@ extern (C) void key_callback(GLFWwindow* window, int key, int scancode, int acti
 				glfwSetWindowShouldClose(window, true);
 				break;
 			case GLFW_KEY_Z:
-				Manager.loadSprite("../../../container.jpg");
+				Manager.loadSprite("container.jpg");
 				break;
 			case GLFW_KEY_X:
-				Manager.loadSprite("../../../awesomeface.png");
+				Manager.loadSprite("awesomeface.png");
 				break;
 			case GLFW_KEY_W:
 				g_sprites[0]._origin.y -= 0.1f;
@@ -61,10 +60,12 @@ extern (C) void key_callback(GLFWwindow* window, int key, int scancode, int acti
 }
 
 int main() {
-	InitDerelict();
+	InitSDL();
+	InitGTFW();
 
 	// Init GLFW
 	if (! glfwInit()) {
+		stderr.writefln("Could not initialize GLFW: %s", glfwGetError(null));
 		return 1;
 	}
 
@@ -77,6 +78,7 @@ int main() {
 	glfwWindowHint(GLFW_VISIBLE, GL_FALSE);
 	g_thread_window = glfwCreateWindow(1, 1, "", null, null);
 	if (! g_thread_window) {
+		stderr.writefln("Could not create GLFW window: %s", glfwGetError(null));
 		glfwTerminate();
 		return 1;
 	}
@@ -85,6 +87,7 @@ int main() {
 	glfwWindowHint(GLFW_VISIBLE, GL_TRUE);
 	GLFWwindow* window = glfwCreateWindow(SCREEN_WIDTH, SCREEN_HEIGHT, TITLE.toStringz, null, g_thread_window);
 	if (! window) {
+		stderr.writefln("Could not create GLFW window: %s", glfwGetError(null));
 		glfwTerminate();
 		return 1;
 	}
@@ -95,7 +98,8 @@ int main() {
 	glfwSetKeyCallback(window, &key_callback);
 
 	// Reload to get new OpenGL functions
-	DerelictGL3.reload();
+	InitOpenGL();
+	//DerelictGL3.reload(); // FIXME: Do we need to update OpenGL extensions?
 
 	stdout.writefln("Vendor:   %s", glGetString(GL_VENDOR).to!string);
 	stdout.writefln("Renderer: %s", glGetString(GL_RENDERER).to!string);
@@ -118,9 +122,7 @@ int main() {
 		// Check if any events have been activiated (key pressed, mouse moved etc.) and call corresponding response functions
 		glfwPollEvents();
 
-		// Render
 		// Clear the colorbuffer
-		//glfwMakeContextCurrent(window);
 		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
 

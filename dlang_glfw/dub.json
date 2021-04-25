@@ -5,16 +5,20 @@
 		"Matthew Brennan Jones <matthew.brennan.jones@gmail.com>",
 	],
 	"homepage": "https://github.com/workhorsy/d_glfw",
-	"copyright": "Copyright (c) 2017 Matthew Brennan Jones",
+	"copyright": "Copyright (c) 2017-2021 Matthew Brennan Jones",
 	"license": "MIT",
 	"targetType": "executable",
 	"mainSourceFile": "source/main.d",
 
 	"dependencies": {
-		"derelict-util": "~>2.0",
-		"derelict-sdl2": "~>2.0",
-		"derelict-gl3": "~>1.0",
-		"derelict-glfw3": "~>2.0.0",
+		"bindbc-glfw": "~>0.13.0",
+		"bindbc-sdl": "~>0.21.2",
+		"bindbc-opengl": "~>0.16.0"
 	},
+	"versions": [
+		"GL_41",
+		"GLFW_33",
+		"SDL_204",
+		"SDL_Image",
+	]
 }
-
